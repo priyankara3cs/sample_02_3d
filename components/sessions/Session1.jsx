@@ -8,12 +8,13 @@ import React, {
   useState,
   Suspense,
 } from "react";
+import * as THREE from "three";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Environment } from "@react-three/drei";
-import * as THREE from "three";
 
 import NewRoad from "../models/NewRoad";
 import BoatWithRipple from "../models/BoatWithRipple";
+import Pond from "../effects/Pond";
 
 function ZoomRig({ t }) {
   const { camera } = useThree();
@@ -38,25 +39,40 @@ function SceneContent() {
         shadow-mapSize-height={2048}
       />
       <Environment preset="sunset" />
-
-      {/* Road & grass */}
-      <group position={[0, -1.1, 0]} rotation={[0, 0, 0]} scale={0.22}>
+      <group position={[0, -1.1, 0]} scale={0.22}>
         <NewRoad />
       </group>
-
-      {/* Boat bottom-right; shows above the road */}
+      
+      {/*  Pond (big) */}
       <group
-        position={[1.25, -0.24, 1.85]}
+        position={[1.25, -0.245, 1.85]}
         rotation={[0, -0.35, 0]}
         scale={0.07}
       >
-        <BoatWithRipple showWater={true} waterRadius={1.25} />
+        <Pond
+          radius={20}
+          feather={0.35}
+          color="#9fd0ff"
+          opacity={0.45} // allowed now
+          amp={0.02}
+          speed={1.0}
+          yOffset={0.003}
+          renderOrder={1100}
+        />
+      </group>
+
+       {/* Boat above pond */}
+      <group
+        position={[1.25, -0.19, 1.85]}
+        rotation={[0, -0.35, 0]}
+        scale={0.07}
+      >
+        <BoatWithRipple showWater={false} />
       </group>
     </>
   );
 }
 
-/** Exposes playZoom() so page can run the intro zoom every time */
 const Session1 = forwardRef(function Session1(_, ref) {
   const [t, setT] = useState(0);
   const raf = useRef(null);

@@ -4,7 +4,7 @@ import * as THREE from "three";
 import { useFrame, extend } from "@react-three/fiber";
 import { useGLTF, useAnimations, shaderMaterial } from "@react-three/drei";
 
-/* crash-proof ripple material (only needs position + normal) */
+/* kept for when you enable the boat's own water */
 const RippleMat = shaderMaterial(
   {
     uTime: 0,
@@ -13,34 +13,17 @@ const RippleMat = shaderMaterial(
     uColor: new THREE.Color("#bfe6ff"),
     uOpacity: 0.85,
   },
-  /* glsl */ `
-  uniform float uTime; uniform float uAmp; uniform float uSpeed;
-  varying vec3 vNormal;
-  void main () {
-    vNormal = normalMatrix * normal;
-    vec3 p = position;
-    float wave =
-      sin((p.x + uTime*uSpeed)*1.2)*0.33 +
-      sin((p.y*1.4 + uTime*uSpeed*0.8))*0.33 +
-      sin((p.x*0.7 + p.y*0.9 + uTime*uSpeed*1.3))*0.34;
-    p.z += wave * uAmp;
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
-  }`,
-  /* glsl */ `
-  uniform vec3 uColor; uniform float uOpacity; varying vec3 vNormal;
-  void main () {
-    float light = dot(normalize(vNormal), normalize(vec3(0.7,1.0,0.6)))*0.5 + 0.5;
-    vec3 col = uColor * (0.75 + 0.25*light);
-    gl_FragColor = vec4(col, uOpacity);
-  }`
+  `uniform float uTime,uAmp,uSpeed; varying vec3 vNormal;
+   void main(){ vNormal=normalMatrix*normal; vec3 p=position;
+   float w=sin((p.x+uTime*uSpeed)*1.2)*.33+sin((p.y*1.4+uTime*uSpeed*.8))*.33+sin((p.x*.7+p.y*.9+uTime*uSpeed*1.3))*.34;
+   p.z+=w*uAmp; gl_Position=projectionMatrix*modelViewMatrix*vec4(p,1.0); }`,
+  `uniform vec3 uColor; uniform float uOpacity; varying vec3 vNormal;
+   void main(){ float L=dot(normalize(vNormal),normalize(vec3(.7,1.,.6)))*.5+.5;
+   vec3 c=uColor*(.75+.25*L); gl_FragColor=vec4(c,uOpacity); }`
 );
 extend({ RippleMat });
 
-/**
- * Loads /public/3d/BoatWithRipple.glb
- * - Ignores GLB water (we create a procedural water plane)
- * - Forces BOAT meshes to render on top (no depth issues)
- */
+/** showWater=false => only the boat (opaque) */
 export default function BoatWithRipple({
   showWater = true,
   waterRadius = 1.25,
@@ -53,7 +36,7 @@ export default function BoatWithRipple({
 
   const waterGeo = useMemo(() => {
     const geo = new THREE.CircleGeometry(waterRadius, 96);
-    geo.rotateX(-Math.PI / 2); // XY -> XZ
+    geo.rotateX(-Math.PI / 2);
     return geo;
   }, [waterRadius]);
 
@@ -61,19 +44,21 @@ export default function BoatWithRipple({
     if (ripple.current) ripple.current.uTime += dt;
   });
 
-  // Make boat render above the road (no depth test/write) — water stays normal
-  useEffect(() => {
-    if (!group.current) return;
-    group.current.traverse((obj) => {
-      if (obj.isMesh && obj.name !== "WaterPlane") {
-        obj.renderOrder = 999;
-        if (obj.material) {
-          obj.material.depthTest = false;
-          obj.material.depthWrite = false;
-        }
-      }
-    });
-  }, []);
+  // Make BOAT meshes opaque, depth-tested, and drawn after pond
+ useEffect(() => {
+   if (!group.current) return;
+   group.current.traverse((obj) => {
+     if (obj.isMesh && obj.name !== "WaterPlane") {
+       obj.renderOrder = 9999;
+       if (obj.material) {
+         obj.material.depthTest = false;
+         obj.material.depthWrite = false;
+       }
+     }
+   });
+ }, []);
+
+
 
   const obj4 = nodes?.Object_4;
   const obj5 = nodes?.Object_5;
@@ -81,7 +66,6 @@ export default function BoatWithRipple({
 
   return (
     <group ref={group} {...props} dispose={null}>
-      {/* WATER (procedural) */}
       {showWater && (
         <mesh
           name="WaterPlane"
@@ -94,14 +78,14 @@ export default function BoatWithRipple({
         </mesh>
       )}
 
-      {/* BOAT */}
+      {/* Boat geometry */}
       <group rotation={[-Math.PI / 2, 0, 0]} scale={[3.53, 2.257, 2.093]}>
         <group rotation={[Math.PI / 2, 0, 0]}>
           {obj7 && (
             <mesh
               geometry={obj7.geometry}
               material={
-                materials?.["Material.002"] ??
+                materials?.["Material.002"] ||
                 new THREE.MeshStandardMaterial({ color: "#ffd26e" })
               }
               castShadow
@@ -112,7 +96,7 @@ export default function BoatWithRipple({
             <mesh
               geometry={obj4.geometry}
               material={
-                materials?.["Material.001"] ??
+                materials?.["Material.001"] ||
                 new THREE.MeshStandardMaterial({ color: "#c5c9d3" })
               }
               position={[0, 0, 0.111]}
@@ -124,7 +108,7 @@ export default function BoatWithRipple({
             <mesh
               geometry={obj5.geometry}
               material={
-                materials?.["Material.002"] ??
+                materials?.["Material.002"] ||
                 new THREE.MeshStandardMaterial({ color: "#ffd26e" })
               }
               castShadow
