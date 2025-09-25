@@ -1,0 +1,156 @@
+/* Visible ring that matches the mask radius (centered) */
+:root {
+  --ring: 18px;
+  --ringColor: rgba(255, 255, 255, 0.35);
+}
+
+.ring-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  /* A radial-gradient that draws a thin ring around the hole */
+  background: radial-gradient(
+    circle at 50% 50%,
+    transparent calc(var(--hole, 0px) - var(--ring)),
+    var(--ringColor) calc(var(--hole, 0px) - var(--ring) + 1px),
+    var(--ringColor) calc(var(--hole, 0px) + var(--ring)),
+    transparent calc(var(--hole, 0px) + var(--ring) + 1px)
+  );
+}
+
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  padding: 0;
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--fg);
+}
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* ---------- Navbar ---------- */
+.nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  background: rgba(3, 8, 12, 0.6);
+  backdrop-filter: blur(8px);
+  z-index: 1000;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+.nav a {
+  margin: 0 8px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.nav a.active,
+.nav a:hover {
+  color: var(--fg);
+}
+
+/* ---------- Page / Layout ---------- */
+.main {
+  position: relative;
+  height: 100vh; /* changed */
+  min-height: 100vh; /* changed */
+}
+
+/* Fixed 3D layer behind session content */
+.canvas-wrap {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+}
+
+/* Stacked session layers (top covers lower with mask reveal) */
+.sessions-stack {
+  position: relative;
+  z-index: 2;
+}
+
+/* ---------- Sessions ---------- */
+.session {
+  /* position: sticky; */
+  top: 0;
+  height: 100vh;
+  width: 100%;
+  display: grid;
+  /* place-items: center; */
+  padding-top: 64px; /* avoid navbar overlap */
+  overflow: clip;
+
+  /* REAL hole to reveal session below (set via --hole) */
+  -webkit-mask-image: radial-gradient(
+    circle at 50% 50%,
+    transparent var(--hole, 0px),
+    #000 calc(var(--hole, 0px) + 1px)
+  );
+  mask-image: radial-gradient(
+    circle at 50% 50%,
+    transparent var(--hole, 0px),
+    #000 calc(var(--hole, 0px) + 1px)
+  );
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+
+.session-inner {
+  max-width: 1000px;
+  padding: 24px;
+}
+.session h1 {
+  font-size: 56px;
+  margin: 12px 0 10px;
+  line-height: 1;
+}
+.session p {
+  font-size: 18px;
+  color: var(--muted);
+  max-width: 700px;
+}
+
+/* Center label shown during reveal (optional) */
+.reveal-label {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 14px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--accent);
+  opacity: var(--labelOpacity, 0);
+  pointer-events: none;
+}
+
+/* ---------- Palette variations ---------- */
+.session-1 {
+  background: linear-gradient(180deg, #92c9fa, #8ff1e1, #147600);
+  /* background: transparent; */
+}
+.session-2 {
+  background: linear-gradient(180deg, #92c9fa, #8ff1e1, #147600);
+}
+.session-3 {
+  background: linear-gradient(180deg, #d7e073, #101820);
+}
+.session-4 {
+  background: linear-gradient(180deg, #e761d1, #121b24);
+}
+.session-5 {
+  background: linear-gradient(180deg, #ed6b87, #14202a);
+}
