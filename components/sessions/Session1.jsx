@@ -42,32 +42,32 @@ function SceneContent() {
       <group position={[0, -1.1, 0]} scale={0.22}>
         <NewRoad />
       </group>
-      
-      {/*  Pond (big) */}
+
+      {/* Pond group (scaled parent) */}
       <group
         position={[1.25, -0.245, 1.85]}
         rotation={[0, -0.35, 0]}
         scale={0.07}
       >
+        {/* Pond at the origin of the parent */}
         <Pond
           radius={20}
           feather={0.35}
-          color="#9fd0ff"
-          opacity={0.45} // allowed now
+          // color="#4fc3f7"
+          opacity={0.32}
           amp={0.02}
           speed={1.0}
           yOffset={0.003}
-          renderOrder={1100}
+          renderOrder={999}
+          scaleForShader={0.07} // match the parent's scale!
         />
-      </group>
 
-       {/* Boat above pond */}
-      <group
-        position={[1.25, -0.19, 1.85]}
-        rotation={[0, -0.35, 0]}
-        scale={0.07}
-      >
-        <BoatWithRipple showWater={false} />
+        {/* Boat: same X/Z as pond, tiny local Y lift so it sits above the water */}
+        <group position={[0, 0.06, 0]}>
+          {" "}
+          {/* 0.06 * 0.07 ≈ 0.0042 world-units */}
+          <BoatWithRipple showWater={false} />
+        </group>
       </group>
     </>
   );

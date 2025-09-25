@@ -45,20 +45,27 @@ export default function BoatWithRipple({
   });
 
   // Make BOAT meshes opaque, depth-tested, and drawn after pond
- useEffect(() => {
-   if (!group.current) return;
-   group.current.traverse((obj) => {
-     if (obj.isMesh && obj.name !== "WaterPlane") {
-       obj.renderOrder = 9999;
-       if (obj.material) {
-         obj.material.depthTest = false;
-         obj.material.depthWrite = false;
-       }
-     }
-   });
- }, []);
+  useEffect(() => {
+    if (!group.current) return;
+    group.current.traverse((obj) => {
+      if (obj.isMesh && obj.name !== "WaterPlane") {
+        // Draw after the pond (pond renderOrder = 999)
+        obj.renderOrder = 2000;
 
+        if (obj.material) {
+          // Make it participate in the transparent pass, but still look opaque
+          obj.material.transparent = true; // <- important
+          obj.material.opacity = 1;
 
+          // Disable depth testing/writing so it cleanly overlays the pond
+          obj.material.depthTest = false;
+          obj.material.depthWrite = false;
+
+          obj.material.side = THREE.FrontSide;
+        }
+      }
+    });
+  }, []);
 
   const obj4 = nodes?.Object_4;
   const obj5 = nodes?.Object_5;
